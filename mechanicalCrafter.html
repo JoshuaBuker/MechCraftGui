@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechical Crafter Recipe Maker</title>
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<style>
+    :root {
+        --grid-width: 5;
+        --grid-height: 5;
+    }
+    html {
+        font-family: sans-serif;
+    }
+    body {
+        background-color: #32323b;
+        /* background-color: #999999; */
+    }
+    .title {
+        font-size: 3em;
+        color: rgb(255, 255, 255);
+        text-align: center;
+    }
+    .col2-65-35 {
+        display: grid;
+        justify-content: center;
+        grid-template-columns: 50% 49%;
+        gap: 1rem;
+    }
+
+    .col2-10-90 {
+        display: grid;
+        justify-content: left;
+        grid-template-columns: 10% 90%;
+        gap: 1rem;
+    }
+
+    .crafting-graphic {
+        /* border: 1px solid white; */
+    }
+    .stats-menu {
+        border: 1px solid white;
+    }
+    .size-input {
+        width: 2em;
+        font-size: 1em;
+        background: #edecf0;
+    }
+    #size-btn {
+        font-size: 0.5em;
+        background: #d6d4db;
+        vertical-align: middle;
+        margin-left: 1rem;
+
+    }
+    .grid-size {
+        font-size: 2em;
+        text-align: center;
+        color: rgb(255, 255, 255);
+    }
+    #grid-container {
+        max-width: 70%;
+        margin: auto;
+        /* aspect-ratio: 1/1; */
+        /* border: 1px solid white; */
+        display: grid;
+        /* gap: calc(3rem / var(--grid-size)); */
+        grid-template-columns: repeat(var(--grid-width), 1fr);
+        grid-template-rows: repeat(var(--grid-height), 1fr);
+    }
+    .slot {
+        border: 1px solid rgba(255, 255, 255, 0.527);
+        aspect-ratio: 1/1;
+        display: grid;
+        place-items: center;
+    }
+    .selected {
+        border: 3px solid red;
+    }
+
+    .slot > h2 {
+        color: rgb(255, 255, 255);
+        padding: 0;
+        margin: 0;
+        font-size: calc(10em / var(--grid-width));
+    }
+
+    #input-selector, #output-selector, #info-panel {
+        /* border: 1px solid purple; */
+        margin: auto;
+        padding: 2rem;
+    }
+
+    .info-input {
+        color: white;
+    }
+
+    #inputs {
+        text-align: center;
+        font-size: 2em;
+        border-radius: 5px;
+    }
+
+    *:focus {
+        outline: none;
+    }
+
+    .inputOption > .symbol {
+        width: 3em;
+    }
+
+    .inputOption, .outputOption {
+        padding: 0.5rem 0 0.5rem 0;
+    }
+
+    .inputOption > .input-name, .outputOption > .output-name {
+        margin-left: 1rem;
+        width: 35em;
+    }
+    #addInput, #addOutput {
+        margin-top: 1rem;
+    }
+    .stats-heading {
+        margin: 1rem;
+        color: white;
+    }
+    .chance {
+        width: 3rem;
+    }
+    #generate {
+        font-size: 2em;
+        margin: 2rem;
+        border-radius: 10px;
+    }
+    #generated-code {
+        width: 90%;
+        display: grid;
+        justify-content: center;
+        margin: 5rem auto 2rem auto;
+    }
+
+</style>
+
+<body>
+    <div class="app-wrapper">
+        <h1 class="title">Mechanical Crafter Recipe Maker</h1>
+        <div class="col2-65-35">
+            <div class="crafting-graphic">
+                <p class="grid-size">Grid Size: <input id="grid-width" class="size-input" type="number"> x <input id="grid-height" class="size-input" type="number"><button id="size-btn">Go</button></p>
+                <div id="grid-container">
+
+                </div>
+            </div>
+            <div class="stats-menu">
+                <h2 class="stats-heading">Inputs</h2>
+                <div id="input-selector">
+                    <div class="inputOption"><input type="radio" name="selected-input"><input class="symbol" type="text"><input class="input-name" type="text"></div>
+                    <button id="addInput">+</button> <button id="removeInput">-</button>
+                </div>
+                <hr style="width: 95%;">
+                <h2 class="stats-heading">Outputs</h2>
+                <div id="output-selector">
+                    <div class="outputOption"><input type="radio" name="selected-output"><input class="chance" type="number"><input class="output-name" type="text"></div>
+                    <button id="addOutput">+</button> <button id="removeOutput">-</button>
+                </div>
+                <hr style="width: 95%;">
+                <h2 class="stats-heading">Info</h2>
+                <div id="info-panel">
+                    <div class="col2-10-90">
+                        <label class="info-input" for="name">Item Name: </label><input type="text" id="item-name" style="width: 35em;">
+                        <label class="info-input" for="name">Item ID: </label><input type="text" id="item-id" style="width: 35em;">
+                    </div>
+                </div>
+                <hr style="width: 95%;">
+                <button id="generate">Generate</button>
+            </div>
+        </div>
+        <div id="generated-code">
+            <textarea id="display" rows="50" cols="200" style="font-size: 1.3em;"></textarea>
+        </div>
+    </div>
+</body>
+<script>
+    $("#size-btn").click(function() {
+        console.log("Pressed");
+        var width = $("#grid-width").val();
+        var height = $("#grid-height").val();
+        var slots = parseInt(width) * parseInt(height);
+
+        console.log(slots)
+
+        $(":root").css({
+            "--grid-width": width,
+            "--grid-height": height
+        })
+
+        $("#grid-container").empty();
+
+        for (let i = 0; i < slots; i++) {
+            console.log("add");
+            $("#grid-container").append("<div class='slot'><h2></h2></div>")
+        }
+
+        configureButtonEvents()
+    });
+
+    function configureButtonEvents() {
+        $('.inputOption .symbol').on("change", function() {
+            var option = $(this).parent();
+            var symbol = $(this).val()
+
+            console.log(symbol)
+
+            if (symbol != "") {
+                var colorCode = scale(symbol.charCodeAt(0), 60, 130, 0, 360);
+                var borderConfig = `hsl(${colorCode}, 50%, 50%)`;
+
+                option.css({
+                    "background": borderConfig
+                });
+            } else {
+                option.css({
+                    "border": "none"
+                });
+            }
+        })
+
+        $(".slot").click(function() {
+            var parent = $('input[name="selected-input"]:checked').parent();
+            var symbol = parent.find(".symbol").first().val();
+            var slot = $(this).find("h2");
+            var colorValue = parent.css("background-color");
+
+            slot.text(symbol)
+            slot.css({
+                "color": colorValue
+            });
+        })
+    }
+    
+
+        // $('input[type=radio][name=selected-input]').on("change", function() {
+    
+    $("#addInput").click(function() {
+        if ($("#input-selector > .inputOption").length > 0) {
+            $("#input-selector .inputOption").last().after('<div class="inputOption"><input type="radio" name="selected-input"><input class="symbol" type="text"><input class="input-name" type="text"></div>');
+        } else {
+            $("#input-selector").prepend('<div class="inputOption"><input type="radio" name="selected-input"><input class="symbol" type="text"><input class="input-name" type="text"></div>');
+        }
+        configureButtonEvents();
+    });
+
+    $("#addOutput").click(function() {
+        if ($("#output-selector > .outputOption").length > 0) {
+            $("#output-selector .outputOption").last().after('<div class="outputOption"><input type="radio" name="selected-output"><input class="chance" type="number"><input class="output-name" type="text"></div>');
+        } else {
+            $("#output-selector").prepend('<div class="outputOption"><input type="radio" name="selected-output"><input class="chance" type="number"><input class="output-name" type="text"></div>');
+        }
+        configureButtonEvents();
+    });
+
+    $("#removeInput").click(function() { 
+        $('input[name="selected-input"]:checked').parent().remove()
+    });
+
+    $("#removeOutput").click(function() { 
+        $('input[name="selected-output"]:checked').parent().remove()
+    });
+
+    $("#generate").on("click", function() {
+        var code = `event.recipe.create.mechanical_crafting('${$("#item-name").val()}', [\n`
+
+        var index = 0;
+        var slots = $("#grid-container").find(".slot");
+        var width = parseInt($("#grid-width").val());
+        var height = parseInt($("#grid-height").val());
+
+        for (let i = 0; i < height; i++) {
+            var str = "    '";
+            for (let j = 0; j < width; j++) {
+                var slotContainer = slots[index];
+                var text = $(slotContainer).children(":first").text();
+                console.log(text)
+                if (text != "") {
+                    str += text;
+                } else {
+                    str += " ";
+                }
+                index++;
+            }
+            if (i < height - 1) {
+                str += "',\n";
+            } else {
+                str += "'\n";
+            }
+            
+            code += str;
+        }
+        code += "], {\n";
+
+        var numOfInputs = $(".inputOption").length;
+
+        $(".inputOption").each(function(index, value) {
+            if (index < numOfInputs - 1) {
+                code += `    ${$(value).children(".symbol:first").val()}: ${$(value).children(".input-name:first").val()},\n`;
+            } else {
+                code += `    ${$(value).children(".symbol:first").val()}: ${$(value).children(".input-name:first").val()}\n`;
+            }
+            
+        });
+
+        code += `}).id('${$("#item-id").val()}')`;
+
+        $("#display").text(code)
+    });
+
+    function hashCode(str) { // java String#hashCode
+        var hash = 0;
+        for (var i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return hash;
+    } 
+
+    function intToRGB(i){
+        var c = (i & 0x00FFFFFF)
+            .toString(16)
+            .toUpperCase();
+
+        return "00000".substring(0, 6 - c.length) + c;
+    }
+
+    function scale(number, inMin, inMax, outMin, outMax) {
+        return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+    }
+
+    configureButtonEvents();
+
+</script>
+</html>

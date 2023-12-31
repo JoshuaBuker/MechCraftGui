@@ -306,9 +306,9 @@
 
         $(".inputOption").each(function(index, value) {
             if (index < numOfInputs - 1) {
-                code += `    ${$(value).children(".symbol:first").val()}: ${$(value).children(".input-name:first").val()},\n`;
+                code += `    ${$(value).children(".symbol:first").val()}: '${$(value).children(".input-name:first").val()}',\n`;
             } else {
-                code += `    ${$(value).children(".symbol:first").val()}: ${$(value).children(".input-name:first").val()}\n`;
+                code += `    ${$(value).children(".symbol:first").val()}: '${$(value).children(".input-name:first").val()}'\n`;
             }
             
         });
